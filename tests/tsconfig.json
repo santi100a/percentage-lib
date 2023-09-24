@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+        "target": "es3",
+        "strict": true,
+        "noImplicitAny": true,
+        "noImplicitThis": true,
+        "strictNullChecks": true,
+        "strictFunctionTypes": true,
+    }
+}
