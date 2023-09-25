@@ -89,7 +89,7 @@ jobs:
             Hi, @${{ github.event.pull_request.user.login }}! I'm afraid the CI check for PR #${{ github.event.pull_request.number }} has failed! 😭 
             Please review [the logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.
             Don't worry, it'll run again if you commit any changes to this PR. 😉
-      - name: Label PR as "CI failed"
+      - name: Label PR as "CI failed" (if it did fail)
         if: failure()
         uses: actions/labeler@v4
         with:
