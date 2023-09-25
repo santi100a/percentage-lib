@@ -24,8 +24,21 @@
 ## What's this?
 
 This is a lightweight, portable NPM package to take the percentage of any number.
+The following is the fundamental equation of percentages:
 
 $$ P = \frac{1}{100} \cdot n \cdot p $$
+
+In this formula:
+
+- P represents the value of the percentage.
+- n represents the number over which the percentage calculation will take place.
+- p represents the percentage.
+
+It's clearer if we look at an example:
+
+$$ \frac{1}{100} \times 300 \times 20 = 60 $$
+
+This means that 20% of 300 is equal to 60, which is indeed correct.
 
 ## Installation
 
