@@ -1,0 +1,89 @@
+name: PR Review Author Notification Workflow
+
+on:
+  pull_request_review:
+    types:
+      - submitted
+
+jobs:
+  check_review:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      statuses: write
+    steps:
+      - name: Check PR Review
+        id: check_review
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const review = context.payload.review;
+            const isMaintainer = review.user.type === "User" && 
+            review.user.login === "${{ github.repository_owner }}"; 
+            const isApproval = review.state === "approved";
+            const isRequestForChanges = review.state === "changes_requested";
+
+            if (!isMaintainer) {
+              console.log('Reviewer is not a maintainer.');
+              return 'not_maintainer'; 
+            }
+
+            if (isApproval) {
+              console.log("Maintainer approved the PR.");
+              return "approved";
+            } else if (isRequestForChanges) {
+              console.log("Maintainer requested changes on the PR.");
+              return "changes_requested";
+            }
+
+            console.log("Review action does not match criteria.");
+            return "not_triggered";
+            
+        env:
+          MAINTAINER_USERNAME: ${{ github.repository_owner }}
+      - name: Check Workflow Status
+        uses: actions/github-script@v6
+        id: workflow-status
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { data: workflows } = await github.actions.listWorkflowRunsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'YOUR_WORKFLOW_ID', // Replace with your workflow's ID or name
+              event: 'pull_request',
+              branch: context.payload.pull_request.head.ref,
+              status: 'success', // You can change this to 'failure' or 'completed' as needed
+              per_page: 1,
+            });
+            
+            if (workflows.total_count === 0) {
+              console.log('No matching workflow runs found.');
+              return 'false'; // No matching workflow run found, return false
+            }
+            
+            const latestWorkflow = workflows.workflow_runs[0];
+            console.log(`Latest workflow run status: ${latestWorkflow.status}`);
+            
+            return latestWorkflow.status === 'completed' ? 'true' : 'false';
+      - name: Comment if changes were requested
+        uses: winterjung/comment@v1.1.0
+        if: steps.check_review.outputs.value == "changes_requested"
+        with:
+          issue_number: ${{ github.event.pull_request.number }}
+          token: ${{ github.token }}
+          body: |
+            Hi, @${{ github.event.pull_request.user.login }}! One or more reviewers have requested changes. Please address them. 
+            I'll be right back once they approve or I see new commits. Have a nice day! ✨
+      - name: Comment if changes were approved
+        uses: winterjung/comment@v1.1.0
+        if: steps.check_review.outputs.value == "approved" && steps.workflow_status.outputs.value == "true"
+        with:
+          issue_number: ${{ github.event.pull_request.number }}
+          token: ${{ github.token }}
+          body: |
+            Hi, @${{ github.event.pull_request.user.login }}! One or more reviewers approved! 🎉🎉
+            @${{ github.repository_owner }} -- please consider merging this pull request, everything seems okay!
+
+
