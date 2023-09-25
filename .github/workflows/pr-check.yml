@@ -93,7 +93,7 @@ jobs:
         if: failure()
         uses: actions/labeler@v4
         with:
-          sync-label: true
+          sync-labels: true
           repo-token: ${{ secrets.GITHUB_TOKEN }}
   assign-and-ping:
     runs-on: ubuntu-latest
